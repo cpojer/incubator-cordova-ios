@@ -517,10 +517,6 @@
     if ((audioFile != nil) && (audioFile.resourceURL != nil)) {
         NSError* __autoreleasing error = nil;
 
-        if (audioFile.recorder != nil) {
-            [audioFile.recorder stop];
-            audioFile.recorder = nil;
-        }
         // get the audioSession and set the category to allow recording when device is locked or ring/silent switch engaged
         if ([self hasAudioSession]) {
             [self.avSession setCategory:AVAudioSessionCategoryRecord error:nil];
@@ -534,8 +530,10 @@
             }
         }
 
-        // create a new recorder for each start record
-        audioFile.recorder = [[CDVAudioRecorder alloc] initWithURL:audioFile.resourceURL settings:nil error:&error];
+        // reuse the recorder if possible and resume recording
+        if (audioFile.recorder == nil) {
+            audioFile.recorder = [[CDVAudioRecorder alloc] initWithURL:audioFile.resourceURL settings:nil error:&error];
+        }
 
         bool recordingSuccess = NO;
         if (error == nil) {
@@ -571,21 +569,33 @@
     return;
 }
 
+- (void)pauseRecordingAudio:(CDVInvokedUrlCommand*)command
+{
+    NSString* mediaId = [command.arguments objectAtIndex:0];
+    CDVAudioFile* audioFile = [[self soundCache] objectForKey:mediaId];
+
+    if ((audioFile != nil) && (audioFile.recorder != nil)) {
+        NSLog(@"Paused recording audio sample '%@'", audioFile.resourcePath);
+        [audioFile.recorder pause];
+        NSString* jsString = [NSString stringWithFormat:@"%@(\"%@\",%d,%d);", @"cordova.require('cordova/plugin/Media').onStatus", mediaId, MEDIA_STATE, MEDIA_PAUSED];
+        [self.commandDelegate evalJs:jsString];
+    }
+
+    if (self.avSession) {
+        [self.avSession setActive:NO error:nil];
+    }
+}
+
 - (void)stopRecordingAudio:(CDVInvokedUrlCommand*)command
 {
     NSString* mediaId = [command.arguments objectAtIndex:0];
 
     CDVAudioFile* audioFile = [[self soundCache] objectForKey:mediaId];
-    NSString* jsString = nil;
 
     if ((audioFile != nil) && (audioFile.recorder != nil)) {
         NSLog(@"Stopped recording audio sample '%@'", audioFile.resourcePath);
         [audioFile.recorder stop];
         // no callback - that will happen in audioRecorderDidFinishRecording
-    }
-    // ignore if no media recording
-    if (jsString) {
-        [self.commandDelegate evalJs:jsString];
     }
 }
 
