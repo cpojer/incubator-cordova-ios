@@ -44,6 +44,7 @@ enum CDVMediaMsg {
     MEDIA_STATE = 1,
     MEDIA_DURATION = 2,
     MEDIA_POSITION = 3,
+    MEDIA_LEVEL = 4,
     MEDIA_ERROR = 9
 };
 typedef NSUInteger CDVMediaMsg;
@@ -84,6 +85,7 @@ typedef NSUInteger CDVMediaMsg;
 {
     NSMutableDictionary* soundCache;
     AVAudioSession* avSession;
+    NSTimer* levelTimer;
 }
 @property (nonatomic, strong) NSMutableDictionary* soundCache;
 @property (nonatomic, strong) AVAudioSession* avSession;
@@ -111,6 +113,7 @@ typedef NSUInteger CDVMediaMsg;
 - (void)startRecordingAudio:(CDVInvokedUrlCommand*)command;
 - (void)pauseRecordingAudio:(CDVInvokedUrlCommand*)command;
 - (void)stopRecordingAudio:(CDVInvokedUrlCommand*)command;
+- (void)levelTimerCallback:(NSTimer *)timer;
 
 - (void)setVolume:(CDVInvokedUrlCommand*)command;
 

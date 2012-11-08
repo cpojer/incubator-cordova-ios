@@ -552,6 +552,9 @@
             audioFile.recorder.mediaId = mediaId;
             recordingSuccess = [audioFile.recorder record];
             if (recordingSuccess) {
+                audioFile.recorder.meteringEnabled = YES;
+                levelTimer = [NSTimer scheduledTimerWithTimeInterval: 0.05 target: self selector: @selector(levelTimerCallback:) userInfo: mediaId repeats: YES];
+
                 NSLog(@"Started recording audio sample '%@'", audioFile.resourcePath);
                 jsString = [NSString stringWithFormat:@"%@(\"%@\",%d,%d);", @"cordova.require('cordova/plugin/Media').onStatus", mediaId, MEDIA_STATE, MEDIA_RUNNING];
             }
@@ -582,6 +585,7 @@
 
 - (void)pauseRecordingAudio:(CDVInvokedUrlCommand*)command
 {
+    [levelTimer invalidate];
     NSString* mediaId = [command.arguments objectAtIndex:0];
     CDVAudioFile* audioFile = [[self soundCache] objectForKey:mediaId];
 
@@ -599,6 +603,7 @@
 
 - (void)stopRecordingAudio:(CDVInvokedUrlCommand*)command
 {
+    [levelTimer invalidate];
     NSString* mediaId = [command.arguments objectAtIndex:0];
 
     CDVAudioFile* audioFile = [[self soundCache] objectForKey:mediaId];
@@ -607,6 +612,19 @@
         NSLog(@"Stopped recording audio sample '%@'", audioFile.resourcePath);
         [audioFile.recorder stop];
         // no callback - that will happen in audioRecorderDidFinishRecording
+    }
+}
+
+- (void)levelTimerCallback:(NSTimer *)timer {
+    NSString* mediaId = [timer userInfo];
+    CDVAudioFile* audioFile = [[self soundCache] objectForKey:mediaId];
+
+    if ((audioFile != nil) && (audioFile.recorder != nil)) {
+        [audioFile.recorder updateMeters];
+        double averagePower = [audioFile.recorder averagePowerForChannel:0];
+        double peakPower = [audioFile.recorder peakPowerForChannel:0];
+        NSString* jsString = [NSString stringWithFormat:@"%@(\"%@\",%d,%f,%f);", @"cordova.require('cordova/plugin/Media').onStatus", mediaId, MEDIA_LEVEL, averagePower, peakPower];
+        [self.commandDelegate evalJs:jsString];
     }
 }
 
