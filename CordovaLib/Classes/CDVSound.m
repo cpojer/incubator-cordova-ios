@@ -516,6 +516,29 @@
     [self.commandDelegate evalJs:jsString];
 }
 
+- (void)audioRecorderBeginInterruption:(AVAudioRecorder *)recorder
+{
+    NSLog(@"Audio interruption");
+    CDVAudioRecorder* aRecorder = (CDVAudioRecorder*)recorder;
+    NSString* mediaId = aRecorder.mediaId;
+    NSString* jsString = [NSString stringWithFormat:@"%@(\"%@\",%d,%d);", @"cordova.require('cordova/plugin/Media').onStatus", mediaId, MEDIA_STATE, MEDIA_PAUSED];
+    [self.commandDelegate evalJs:jsString];
+}
+
+- (void)audioRecorderEncodeErrorDidOccur:(AVAudioRecorder*)recorder error:(NSError*)error
+{
+    [recorder stop];
+    CDVAudioRecorder* aRecorder = (CDVAudioRecorder*)recorder;
+    NSString* mediaId = aRecorder.mediaId;
+
+    if (self.avSession) {
+        [self.avSession setActive:NO error:nil];
+    }
+
+    NSString* jsString = [NSString stringWithFormat:@"%@(\"%@\",%d,%@);", @"cordova.require('cordova/plugin/Media').onStatus", mediaId, MEDIA_ERROR, [self createMediaErrorWithCode:MEDIA_ERR_DECODE message:nil]];
+    [self.commandDelegate evalJs:jsString];
+}
+
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer*)player successfully:(BOOL)flag
 {
     CDVAudioPlayer* aPlayer = (CDVAudioPlayer*)player;
