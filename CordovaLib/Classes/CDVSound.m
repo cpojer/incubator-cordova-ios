@@ -532,7 +532,18 @@
 
         // reuse the recorder if possible and resume recording
         if (audioFile.recorder == nil) {
-            audioFile.recorder = [[CDVAudioRecorder alloc] initWithURL:audioFile.resourceURL settings:nil error:&error];
+            // Thank You Dear Sir
+            // http://stackoverflow.com/questions/11347760/avaudiorecorder-proper-mpeg4-aac-recording-settings
+            NSDictionary *settings = [NSDictionary dictionaryWithObjectsAndKeys:
+                                      [NSNumber numberWithInt:kAudioFormatMPEG4AAC], AVFormatIDKey,
+                                      [NSNumber numberWithFloat:44100.0], AVSampleRateKey,
+                                      [NSNumber numberWithInt:1], AVNumberOfChannelsKey,
+                                      [NSNumber numberWithInt:AVAudioQualityMax], AVSampleRateConverterAudioQualityKey,
+                                      [NSNumber numberWithInt:160000], AVEncoderBitRateKey,
+                                      [NSNumber numberWithInt:16], AVEncoderBitDepthHintKey,
+                                      nil];
+
+            audioFile.recorder = [[CDVAudioRecorder alloc] initWithURL:audioFile.resourceURL settings:settings error:&error];
         }
 
         bool recordingSuccess = NO;
