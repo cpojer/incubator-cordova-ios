@@ -655,7 +655,7 @@
     NSLog(@"Audio interruption");
     CDVAudioRecorder* aRecorder = (CDVAudioRecorder*)recorder;
     NSString* mediaId = aRecorder.mediaId;
-    NSString* jsString = [NSString stringWithFormat:@"%@(\"%@\",%d,%d);", @"cordova.require('cordova/plugin/Media').onStatus", mediaId, MEDIA_STATE, MEDIA_PAUSED];
+    NSString* jsString = [NSString stringWithFormat:@"%@(\"%@\",%d,%d);", @"cordova.require('cordova/plugin/Media').onStatus", mediaId, MEDIA_STATE, MEDIA_INTERRUPTED];
     [self.commandDelegate evalJs:jsString];
 }
 
