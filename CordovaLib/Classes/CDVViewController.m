@@ -84,7 +84,7 @@
 
         // load config.xml settings
         [self loadSettings];
-        useSplashScreen = YES;
+        useSplashScreen = NO;
     }
 }
 
