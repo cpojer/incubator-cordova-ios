@@ -20,6 +20,7 @@
 #import "CDVSound.h"
 #import "NSArray+Comparisons.h"
 #import "CDVJSON.h"
+#import <AudioToolbox/AudioToolbox.h>
 
 #define DOCUMENTS_SCHEME_PREFIX @"documents://"
 #define HTTP_SCHEME_PREFIX @"http://"
@@ -532,12 +533,16 @@
 
         // reuse the recorder if possible and resume recording
         if (audioFile.recorder == nil) {
+            UInt32 channels;
+            UInt32 size = sizeof(channels);
+            AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareInputNumberChannels, &size, &channels);
+
             // Thank You Dear Sir
             // http://stackoverflow.com/questions/11347760/avaudiorecorder-proper-mpeg4-aac-recording-settings
             NSDictionary *settings = [NSDictionary dictionaryWithObjectsAndKeys:
                                       [NSNumber numberWithInt:kAudioFormatMPEG4AAC], AVFormatIDKey,
                                       [NSNumber numberWithFloat:44100.0], AVSampleRateKey,
-                                      [NSNumber numberWithInt:1], AVNumberOfChannelsKey,
+                                      [NSNumber numberWithInt:channels], AVNumberOfChannelsKey,
                                       [NSNumber numberWithInt:AVAudioQualityMax], AVSampleRateConverterAudioQualityKey,
                                       [NSNumber numberWithInt:160000], AVEncoderBitRateKey,
                                       [NSNumber numberWithInt:16], AVEncoderBitDepthHintKey,
