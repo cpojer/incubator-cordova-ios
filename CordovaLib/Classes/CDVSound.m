@@ -620,6 +620,15 @@
     }
 }
 
+- (void)setInputGain:(CDVInvokedUrlCommand*)command
+{
+    float gain = [[command.arguments objectAtIndex:0] floatValue];
+    if (gain >= 0 && gain <= 1.0 && self.avSession.isInputGainSettable) {
+        NSError* __autoreleasing gainError = nil;
+        [self.avSession setInputGain:gain error:&gainError];
+    }
+}
+
 - (void)levelTimerCallback:(NSTimer *)timer {
     NSString* mediaId = [timer userInfo];
     CDVAudioFile* audioFile = [[self soundCache] objectForKey:mediaId];
